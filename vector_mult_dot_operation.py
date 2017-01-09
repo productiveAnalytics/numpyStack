@@ -33,12 +33,12 @@ np_b = np.array(b_list)
 # dot operation #1
 np_vector_mult_result = (np_a * np_b)
 dot_1 = np_vector_mult_result.sum()     # Use the inbuild sum() for the Vector
-print('dot 1 = ', dot1)
+print('dot 1 = ', dot_1)
 
 # dot operation #2
 dot_2 = np.sum(np_a * np_b)             # Use the mp.sum() method, passing the args
-print('dot 2 = ', dot2)
+print('dot 2 = ', dot_2)
 
 # dot operation #3
 dot_3 = np.dot(np_a, np_b)              # Instead of #1 and #2, directly use np.dot() function
-print('dot 3 = ', dot3)
+print('dot 3 = ', dot_3)
