@@ -5,26 +5,41 @@ import numpy as np
 from pprint import pprint
 
 DEFAULT_RATE_OF_INTEREST = 10 # initial constant
+PRECISON = 4
 
 # Matrix =
 #           Income , Cost
 #  year 0  [ 0     , 200  ]  <--- Initial income and Initial/Upfront Cost
 #          | 50    , 100  |
-#          | 100   , 50    |
+#          | 100   , 50   |
 #          [ 300   , 0    ]
 yearwise_income_and_cost_matrix = np.matrix('0 200; 50 100; 100 50; 300 0')
-#yearwise_income_and_cost_matrix = np.matrix('0 200; 50 100')
 
 
 def process(cmd_args) -> None :
+    matrix_provided_flg = False
+    # Set the Rate of Interest - either from command parameter or use Default
     if (cmd_args) :
-        rate_of_interest = int(cmd_args[0])
+        rate_of_interest = float(cmd_args[0])
         print('Rate of Interest = ', str(rate_of_interest))
+
+        if (len(cmd_args) > 1) :
+            matrix_input_str = cmd_args[1]
+            try :
+                yearwise_income_and_cost_matrix = np.matrix(matrix_input_str)
+                matrix_provided_flg = True
+            except ValueError as valErr:
+                print(valErr)
+                print('Unable to parse the Income & Cost matrix')
+                print('Exiting...')
+                raise SystemExit
     else :
         rate_of_interest = DEFAULT_RATE_OF_INTEREST
         print('Using *Default* Rate of Interest ', DEFAULT_RATE_OF_INTEREST)    
-    
+
+    print('Using matrix provided by ', 'User' if matrix_provided_flg else 'System')
     pprint(yearwise_income_and_cost_matrix)
+    
     npv = calc_Net_Present_Value (yearwise_income_and_cost_matrix, rate_of_interest)
     print('NPV = ', npv)
     
@@ -32,14 +47,17 @@ def process(cmd_args) -> None :
 def calc_Present_Value (Future_Value : float, Rate_of_Return : float, year : int) -> float :
     ''' PV = FV / ((1 + r) ** n) '''
     denom = math.pow( (1 + Rate_of_Return/100) , year )
-    #denom = ((1 + Rate_of_Return) ** year)
-    return Future_Value / denom
+
+    # Round to four decimal places
+    return round(Future_Value / denom, PRECISON)
 
 def calc_Net_Present_Value(yearwise_income_and_cost_mat : np.matrix, rate_of_return: float) -> float :
     ''' Calculates Net Prsent Value
         i.e. sum (Present Value for incomes) - sum (Present Value for costs)
         across all the years, assuming constant Rate of Return
     '''
+
+    # Confirm the Matrix has correct shape i.e. N_No_of_Rows x Exactly 2 Columns
     shape_tup = yearwise_income_and_cost_mat.shape
 
     number_of_rows    = shape_tup[0]
@@ -72,14 +90,22 @@ def calc_Net_Present_Value(yearwise_income_and_cost_mat : np.matrix, rate_of_ret
 
             sum_of_pv_of_income += pv_income
             sum_of_pv_of_cost   += pv_cost
+            
+    print()
+    sum_of_pv_of_income = round(sum_of_pv_of_income, PRECISON)
+    sum_of_pv_of_cost   = round(sum_of_pv_of_cost, PRECISON)
+    print('Total PV of Income = ', sum_of_pv_of_income)
+    print('Total PV of Cost   = ', sum_of_pv_of_cost)
 
-            print('Sum of PV of Income ', sum_of_pv_of_income)
-            print('Sum of PV of Cost ', sum_of_pv_of_cost)
-    
-    return (sum_of_pv_of_income - sum_of_pv_of_cost)
+    net_present_value = (sum_of_pv_of_income - sum_of_pv_of_cost)
+    return round(net_present_value, PRECISON)
 
 
 if __name__ == "__main__":
+   print('Usage:')
+   print('  py calculate_Net_Present_Value.py <Rate_of_Interest> <Income_Cost_matrix_representation_surrounded_by_Double_Quotes>')
+   print('  e.g py calculate_Net_Present_Value.py 10 "0 200; 50 100; 100 50; 300 0"')
+   print()
    cmd_params_list = sys.argv[1:]
    print('Program arguments {0}'.format(cmd_params_list))
    process(cmd_params_list)
